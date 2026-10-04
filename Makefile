@@ -17,7 +17,7 @@ TARGETS := $(STREAM) $(SWEEP)
 TABLE := include/a8xx_perf_table.inc
 TABLE_CHECK := $(BUILD_DIR)/a8xx_perf_table.generated.inc
 
-.PHONY: all check check-ndk clean deploy table table-check
+.PHONY: all check check-ndk clean deploy enable table table-check
 
 all: $(TARGETS)
 
@@ -45,10 +45,13 @@ table-check: | $(BUILD_DIR)
 check: table-check
 	"$(HOST_CC)" -std=c11 -Wall -Wextra -Wpedantic -Iinclude -fsyntax-only \
 		src/adreno_perf_stream.c src/adreno_perf_sweep.c
-	bash -n scripts/deploy.sh scripts/pull_latest_sweep.sh
+	bash -n scripts/deploy.sh scripts/enable_perfcounters.sh scripts/pull_latest_sweep.sh
 
 deploy: all
 	scripts/deploy.sh
+
+enable:
+	scripts/enable_perfcounters.sh
 
 clean:
 	rm -f "$(STREAM)" "$(SWEEP)" "$(TABLE_CHECK)" "$(TABLE).tmp"

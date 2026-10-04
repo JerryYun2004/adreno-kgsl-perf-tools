@@ -44,6 +44,8 @@ Device:
 - `/dev/kgsl-3d0`, or another compatible path supplied on the command line
 - A kernel implementing the KGSL perfcounter `GET`, `READ`, and `PUT` ioctls
 - Root access or equivalent permission to use those ioctls
+- On the tested kernel, a writable `/sys/class/kgsl/kgsl-3d0/perfcounter`
+  enable node
 
 No Mesa build is needed at runtime. The repository includes the counter XML
 used to generate its C table.
@@ -56,6 +58,7 @@ include/a8xx_perf_table.inc  Generated counter-name table
 data/                        Mesa/Freedreno source XML and license metadata
 tools/                       Counter-table generator
 scripts/deploy.sh            Build and install both tools with ADB
+scripts/enable_perfcounters.sh Explicitly enable counter reads through KGSL
 scripts/pull_latest_sweep.sh Pull the newest sweep without merging old results
 docs/limitations.md          Compatibility and interpretation cautions
 ```
@@ -116,6 +119,49 @@ scripts/deploy.sh
 ```
 
 Run the programs through `su -c` when root is required.
+
+## Enable KGSL performance-counter reads
+
+On the tested OnePlus CPH2653 kernel, KGSL can accept perfcounter `GET`
+requests while rejecting `READ` with `EPERM` when the enable node contains
+`0`. Deployment intentionally does not change this root-controlled sysfs
+setting.
+
+After deployment, and again after a device reboot if the node resets, run:
+
+```bash
+make enable
+```
+
+The helper writes `1` and then verifies that the node reads back as `1`.
+The equivalent command is:
+
+```bash
+adb shell 'su -c "echo 1 > /sys/class/kgsl/kgsl-3d0/perfcounter"'
+```
+
+Verify the state directly:
+
+```bash
+adb shell 'su -c "cat /sys/class/kgsl/kgsl-3d0/perfcounter"'
+```
+
+Expected output:
+
+```text
+1
+```
+
+For a different ADB executable or compatible device node:
+
+```bash
+ADB=/path/to/adb \
+PERFCOUNTER_NODE=/sys/class/kgsl/kgsl-3d0/perfcounter \
+make enable
+```
+
+This path is vendor- and kernel-specific. Confirm the appropriate interface
+before changing it on another device.
 
 ## Stream selected counters
 
@@ -249,6 +295,21 @@ REMOTE_ROOT=/data/local/tmp/my-sweeps \
 DEST_ROOT=/path/to/local/results \
 scripts/pull_latest_sweep.sh
 ```
+
+## Troubleshooting
+
+### `READ failed: Operation not permitted`
+
+If counter `GET` messages succeed but the initial baseline `READ` fails with
+`Operation not permitted`, check the enable-node state:
+
+```bash
+adb shell 'su -c "cat /sys/class/kgsl/kgsl-3d0/perfcounter"'
+```
+
+A value of `0` blocks reads on the tested kernel. Run `make enable`, verify
+that the value is `1`, and retry collection. Successful counter allocation
+alone does not prove that reads are permitted.
 
 ## Validate the source tree
 
