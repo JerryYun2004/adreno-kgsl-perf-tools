@@ -1,0 +1,4 @@
+/build/
+/results/
+.DS_Store
+*.swp
