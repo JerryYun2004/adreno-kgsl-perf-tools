@@ -104,5 +104,10 @@ Root access can weaken Android's security model. Direct hardware-counter use
 may interact with vendor driver assumptions, other profilers, suspend/resume,
 or GPU reset behavior.
 
+On the tested kernel, reads also require explicitly writing `1` to
+`/sys/class/kgsl/kgsl-3d0/perfcounter`. This privileged, device-specific state
+may reset after reboot. Deployment does not change it automatically; use the
+explicit `make enable` target after confirming the correct node for the device.
+
 Use a development device, preserve important data, and monitor kernel logs when
 testing new devices or counter mappings.

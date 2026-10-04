@@ -20,5 +20,6 @@ make -C "$REPO_ROOT" all
 "$ADB" shell chmod 755 "$REMOTE_DIR/adreno_perf_stream" "$REMOTE_DIR/adreno_perf_sweep"
 
 echo "[host] Installed in $REMOTE_DIR"
+echo "[host] Before collection: make -C \"$REPO_ROOT\" enable"
 echo "[host] Streamer help: $ADB shell su -c '$REMOTE_DIR/adreno_perf_stream --help'"
 echo "[host] Sweeper plan: $ADB shell su -c '$REMOTE_DIR/adreno_perf_sweep --list-plan'"
